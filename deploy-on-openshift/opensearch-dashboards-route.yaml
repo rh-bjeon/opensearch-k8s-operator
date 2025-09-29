@@ -1,0 +1,29 @@
+####### 아래 명령어는 OpenSearchCluster의 이름과 네임스페이스에 따라 수정 필요 ########
+####### OpenSearchCluster 이름: opensearch-cluster                         ########
+####### namespace: opensearch                                              ########
+# oc get secret opensearch-cluster-dashboards-cert -n opensearch -o jsonpath='{.data.ca\.crt}' | base64 -d > dest-ca.crt
+# oc create route reencrypt opensearch-dashboards \
+#   -n opensearch \
+#   --service=opensearch-cluster-dashboards \
+#   --port=http \
+#   --dest-ca-cert=dest-ca.crt \
+#   --insecure-policy=Redirect
+################## 위 명령어를 사용하거나 아래 yaml를 수정해서 사용 ##################
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opensearch-dashboards
+  namespace: <ns>
+spec:
+  to:
+    kind: Service
+    name: <dashboards-service-name>        # 예: opensearch-cluster
+    weight: 100
+  port:
+    targetPort: http                       # 또는 서비스의 포트 번호(예: 5601)
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+    # 라우터→백엔드 재암호화 시 신뢰할 백엔드 CA (오퍼레이터가 만든 self-signed CA)
+    destinationCACertificate: |-
+      <contents of dest-ca.crt>

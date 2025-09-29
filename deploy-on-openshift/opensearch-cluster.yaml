@@ -1,0 +1,131 @@
+#Minimal configuration of a cluster with version 2.X of the operator.
+#Note the replacement of 'master' role with 'cluster_manager' on line 49
+apiVersion: opensearch.opster.io/v1
+kind: OpenSearchCluster
+metadata:
+  name: opensearch-cluster ### 필요한 경우 이름 변경
+  namespace: opensearch  ### 필요한 경우 프로젝트 변경
+spec:
+  security:
+    ##################################################
+    ################### OPTIONAL #####################
+    ###### adminCredentialsSecret을 커스터마이징 하려는 경우, 
+    ###### securityConfigSecret도 수정 및 지정 필요
+    #config:
+    #  adminCredentialsSecret:
+    #    name: opensearch-cluster-admin-credentials
+    #  securityConfigSecret:
+    #   name: securityconfig-secret
+    ##################################################
+    tls:
+       http:
+         generate: true 
+       transport:
+         generate: true
+         perNode: true
+  general:
+    setVMMaxMapCount: false 
+    ## openshift-tuned.yaml 적용 후, setVMMaxMapCount: false로 지정하여 opensearch-cluster 생성
+    httpPort: 9200
+    serviceName: opensearch-cluster ### 필요한 경우 이름 변경
+    version: 2.14.0
+    pluginsList: ["repository-s3"]
+    drainDataNodes: true
+#####################################
+########### for openshift ###########
+#                                   #
+#                                   #
+    podSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+    securityContext:
+      allowPrivilegeEscalation: false
+      privileged: false
+#                                   #
+#                                   #
+#####################################
+  dashboards:
+    ##################################################
+    ################### OPTIONAL #####################
+    ###### spec.security.config.adminCredentialsSecret
+    ###### 설정했다면 dashboards에도 credential 지정
+    #opensearchCredentialsSecret:
+    #  name: opensearch-cluster-admin-credentials
+    ##################################################
+
+    ##################################################
+    ################### OPTIONAL #####################
+    #additionalConfig:
+    #  opensearch_security.multitenancy.enabled: "true"
+    ##################################################
+    tls:
+      enable: true
+      generate: true
+    version: 2.14.0
+    enable: true
+    replicas: 1 # You can change replicas
+    resources: # You can change resources
+      requests:
+         memory: "512Mi"
+         cpu: "200m"
+      limits:
+         memory: "1Gi"
+         cpu: "500m"
+#####################################
+########### for openshift ###########
+#                                   #
+#                                   #
+    podSecurityContext:
+      fsGroup: 1000
+      runAsNonRoot: true
+    securityContext:
+      capabilities:
+        drop:
+          - ALL
+      privileged: false
+#                                   #
+#                                   #
+#####################################
+#####################################
+  nodePools:
+    - component: masters
+      replicas: 3 # You can change replicas
+      resources: # You can change resources
+         requests:
+            memory: "8Gi" 
+            cpu: "2"
+         limits:
+            memory: "10Gi"
+            cpu: "4"
+      roles:
+        - "data"
+        - "cluster_manager"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: type
+                  operator: In
+                  values:
+                    - opensearch
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: opster.io/opensearch-nodepool
+                    operator: In
+                    values:
+                      - masters
+              topologyKey: kubernetes.io/hostname
+      persistence:
+############################################################
+########################## CHECK ###########################
+        pvc:
+          storageClass: gp3-csi # <------ 필요한 경우 변경 / You can change storageClass
+          accessModes: # You can change the accessMode
+            - ReadWriteOnce
+############################################################

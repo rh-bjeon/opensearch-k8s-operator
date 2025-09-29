@@ -1,0 +1,31 @@
+##################################################
+##################################################
+# kubectl label nodes <WorkerNode1> type=opensearch 
+# 위 명령어로 opensearch-cluster pod를 생성할 node에 
+# label 지정 후 tuned 적용
+##################################################
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: openshift-no-reapply-sysctl
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - data: |
+      [main]
+      summary=Custom OpenShift profile
+      include=openshift-node
+      [sysctl]
+      vm.max_map_count=262144
+    name: openshift-no-reapply-sysctl
+  recommend:
+    - match:
+        - label: type
+          value: opensearch
+      priority: 15
+      profile: openshift-no-reapply-sysctl
+      operand:
+        tunedConfig:
+          reapply_sysctl: false
+####### reference: 
+####### https://docs.microfocus.com/doc/115/25.3/402-setupopensearchoperator#Create_the_values_yaml_for_the_Operator
