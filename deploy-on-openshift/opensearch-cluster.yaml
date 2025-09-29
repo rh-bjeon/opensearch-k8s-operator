@@ -11,6 +11,7 @@ spec:
     ################### OPTIONAL #####################
     ###### adminCredentialsSecret을 커스터마이징 하려는 경우, 
     ###### securityConfigSecret도 수정 및 지정 필요
+    ##################################################
     #config:
     #  adminCredentialsSecret:
     #    name: opensearch-cluster-admin-credentials
@@ -52,12 +53,14 @@ spec:
     ################### OPTIONAL #####################
     ###### spec.security.config.adminCredentialsSecret
     ###### 설정했다면 dashboards에도 credential 지정
+    ##################################################
     #opensearchCredentialsSecret:
     #  name: opensearch-cluster-admin-credentials
     ##################################################
 
     ##################################################
     ################### OPTIONAL #####################
+    ##################################################
     #additionalConfig:
     #  opensearch_security.multitenancy.enabled: "true"
     ##################################################

@@ -1,6 +1,6 @@
 ##################################################
 ##################################################
-# kubectl label nodes <WorkerNode1> type=opensearch 
+# oc label nodes <WorkerNode1> type=opensearch 
 # 위 명령어로 opensearch-cluster pod를 생성할 node에 
 # label 지정 후 tuned 적용
 ##################################################
